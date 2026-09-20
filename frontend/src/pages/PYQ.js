@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
 
 const marksColor = {
-  2:  { bg: 'rgba(34,197,94,0.15)',  border: '#22c55e', text: '#86efac' },
-  7:  { bg: 'rgba(234,179,8,0.15)',  border: '#eab308', text: '#fde047' },
-  14: { bg: 'rgba(239,68,68,0.15)',  border: '#ef4444', text: '#fca5a5' },
+  2:  { bg: 'rgba(88,129,87,0.14)', border: '#588157', text: '#344E41' },
+  7:  { bg: 'rgba(197,190,169,0.35)', border: '#A3B18A', text: '#344E41' },
+  14: { bg: 'rgba(163,177,138,0.18)', border: '#3A5A40', text: '#173A29' },
 };
 
 const unitNames = {
@@ -68,22 +68,77 @@ function PYQ() {
   const [selectedYear, setSelectedYear] = useState('all');
   const [selectedUnit, setSelectedUnit] = useState('all');
   const [selectedMarks, setSelectedMarks] = useState('all');
+  const [search, setSearch] = useState('');
 
   useEffect(() => {
-    setLoading(true);
-    fetch('http://127.0.0.1:8000/api/pyqs/')
-      .then(res => res.json())
-      .then(data => { setPyqs(data); setLoading(false); })
-      .catch(() => { setError('Could not connect to backend'); setLoading(false); });
+    let cancelled = false;
+
+    const loadPyqs = async () => {
+      setLoading(true);
+      setError(null);
+
+      try {
+        const res = await fetch('http://127.0.0.1:8000/api/pyqs/');
+
+        if (!res.ok) {
+          throw new Error(`HTTP ${res.status}`);
+        }
+
+        const data = await res.json();
+
+        if (!Array.isArray(data)) {
+          throw new Error('Invalid PYQ response');
+        }
+
+        if (!cancelled) {
+          setPyqs(data);
+          setLoading(false);
+        }
+      } catch (err) {
+        if (!cancelled) {
+          setError('Could not connect to backend');
+          setPyqs([]);
+          setLoading(false);
+        }
+      }
+    };
+
+    loadPyqs();
+
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
-  const years = [...new Set(pyqs.map(p => p.year))].sort((a, b) => b - a);
+  const normalizedPyqs = pyqs.map((p, index) => ({
+    ...p,
+    id: p.id ?? `${p.year}-${p.unit}-${p.marks}-${index}`,
+    year: Number(p.year),
+    unit: Number(p.unit),
+    marks: Number(p.marks),
+    question: p.question ?? '',
+    answer: p.answer ?? '',
+  }));
 
-  const filtered = pyqs.filter(p => {
-    const yearOk = selectedYear === 'all' || p.year === parseInt(selectedYear);
-    const unitOk = selectedUnit === 'all' || p.unit === parseInt(selectedUnit);
-    const marksOk = selectedMarks === 'all' || p.marks === parseInt(selectedMarks);
-    return yearOk && unitOk && marksOk;
+  const years = [...new Set(normalizedPyqs.map(p => p.year))]
+    .filter(Boolean)
+    .sort((a, b) => b - a);
+
+  const filtered = normalizedPyqs.filter(p => {
+    const yearOk = selectedYear === 'all' || p.year === Number(selectedYear);
+    const unitOk = selectedUnit === 'all' || p.unit === Number(selectedUnit);
+    const marksOk = selectedMarks === 'all' || p.marks === Number(selectedMarks);
+
+    const query = search.trim().toLowerCase();
+    const searchOk =
+      !query ||
+      String(p.question).toLowerCase().includes(query) ||
+      String(p.answer).toLowerCase().includes(query) ||
+      String(p.year).includes(query) ||
+      String(p.unit).includes(query) ||
+      String(p.marks).includes(query);
+
+    return yearOk && unitOk && marksOk && searchOk;
   });
 
   // Group by unit
@@ -103,7 +158,7 @@ function PYQ() {
           RGPV <span style={styles.highlight}>PYQs</span>
         </h1>
         <p style={styles.subtitle}>
-          Year-wise and unit-wise previous year questions with answers
+          Year-wise, unit-wise and marks-wise previous year questions with short answers
         </p>
 
         {/* Stats */}
@@ -127,6 +182,30 @@ function PYQ() {
 
       {/* Filters */}
       <div style={styles.filtersSection}>
+
+        {/* Search */}
+        <div style={styles.searchRow}>
+          <div style={styles.searchLabel}>🔎 Search</div>
+          <div style={styles.searchWrap}>
+            <input
+              type="text"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              placeholder="Search question, answer, year, unit..."
+              style={styles.searchInput}
+              aria-label="Search PYQs"
+            />
+            {search && (
+              <button
+                type="button"
+                style={styles.clearSearch}
+                onClick={() => setSearch('')}
+              >
+                Clear
+              </button>
+            )}
+          </div>
+        </div>
 
         {/* Year filter */}
         <div style={styles.filterGroup}>
@@ -174,13 +253,28 @@ function PYQ() {
           </div>
         </div>
 
+        <div style={styles.resetRow}>
+          <button
+            type="button"
+            style={styles.resetBtn}
+            onClick={() => {
+              setSelectedYear('all');
+              setSelectedUnit('all');
+              setSelectedMarks('all');
+              setSearch('');
+            }}
+          >
+            Reset Filters
+          </button>
+        </div>
+
       </div>
 
       {/* Content */}
       {loading && (
         <div style={styles.centerMsg}>
           <div style={styles.loader} />
-          <p style={{ color: '#c4b5fd', marginTop: '16px' }}>Loading questions...</p>
+          <p style={{ color: '#173A29', marginTop: '16px' }}>Loading questions...</p>
         </div>
       )}
 
@@ -192,7 +286,7 @@ function PYQ() {
 
       {!loading && !error && filtered.length === 0 && (
         <div style={styles.centerMsg}>
-          <p style={{ color: '#9ca3af', fontSize: '1.1rem' }}>
+          <p style={{ color: '#46534B', fontSize: '1.1rem' }}>
             No questions found for selected filters.
           </p>
         </div>
@@ -223,66 +317,140 @@ function PYQ() {
 
 const styles = {
   container: {
-    backgroundColor: '#0a0010',
+    backgroundColor: '#E9E5D8',
     minHeight: '100vh',
     paddingBottom: '80px',
   },
   header: {
     textAlign: 'center',
-    padding: '60px 20px 40px',
-    background: 'linear-gradient(180deg, rgba(124,58,237,0.15) 0%, transparent 100%)',
-    borderBottom: '1px solid rgba(139,92,246,0.2)',
+    padding: '40px 20px 42px',
+    background: 'linear-gradient(180deg, #D8D3C0 0%, #EEEADF 100%)',
+    borderBottom: '1px solid rgba(52,78,65,0.15)',
   },
   headerBadge: {
     display: 'inline-block',
-    background: 'rgba(139,92,246,0.15)',
-    border: '1px solid rgba(139,92,246,0.35)',
-    color: '#c4b5fd',
+    background: 'rgba(52,78,65,0.08)',
+    border: '1px solid rgba(52,78,65,0.22)',
+    color: '#173A29',
     padding: '6px 16px',
     borderRadius: '20px',
     fontSize: '13px',
     marginBottom: '16px',
   },
   title: {
-    color: 'white',
+    color: '#173A29',
     fontSize: '3rem',
     fontWeight: '800',
     marginBottom: '12px',
   },
   highlight: {
-    color: '#a855f7',
-    textShadow: '0 0 30px rgba(168,85,247,0.5)',
+    color: '#173A29',
+    textShadow: 'none',
   },
   subtitle: {
-    color: '#9ca3af',
+    color: '#46534B',
     fontSize: '1rem',
     marginBottom: '30px',
   },
   statsRow: {
     display: 'flex',
     justifyContent: 'center',
-    gap: '40px',
+    gap: '0',
     flexWrap: 'wrap',
-    marginTop: '20px',
+    margin: '20px auto 0',
+    maxWidth: '620px',
+    background: 'rgba(255,255,255,0.62)',
+    border: '1px solid rgba(52,78,65,0.12)',
+    borderRadius: '20px',
+    padding: '18px 12px',
+    boxShadow: '0 10px 30px rgba(52,78,65,0.08)',
   },
-  statBox: { textAlign: 'center' },
+  statBox: { textAlign: 'center', flex: '1 1 180px', padding: '4px 18px' },
   statValue: {
     fontSize: '2rem',
     fontWeight: '800',
-    color: '#a855f7',
+    color: '#173A29',
   },
   statLabel: {
-    color: '#9ca3af',
+    color: '#46534B',
     fontSize: '0.8rem',
     marginTop: '4px',
   },
   filtersSection: {
-    padding: '30px 60px',
-    borderBottom: '1px solid rgba(139,92,246,0.15)',
+    margin: '24px clamp(16px, 4vw, 56px)',
+    padding: '24px 30px',
+    border: '1px solid rgba(52,78,65,0.12)',
+    borderRadius: '20px',
+    background: 'rgba(255,255,255,0.58)',
+    boxShadow: '0 10px 28px rgba(52,78,65,0.07)',
     display: 'flex',
     flexDirection: 'column',
-    gap: '16px',
+    gap: '14px',
   },
+  searchRow: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '16px',
+    flexWrap: 'wrap',
+  },
+
+  searchLabel: {
+    color: '#173A29',
+    fontSize: '13px',
+    fontWeight: '600',
+    minWidth: '70px',
+    letterSpacing: '0.5px',
+  },
+
+  searchWrap: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '8px',
+    flex: 1,
+    minWidth: '260px',
+  },
+
+  searchInput: {
+    width: '100%',
+    padding: '11px 15px',
+    borderRadius: '12px',
+    border: '1px solid rgba(52,78,65,0.22)',
+    background: '#F8F5EC',
+    color: '#17251D',
+    fontSize: '14px',
+    outline: 'none',
+    boxSizing: 'border-box',
+  },
+
+  clearSearch: {
+    padding: '9px 14px',
+    borderRadius: '10px',
+    border: '1px solid rgba(52,78,65,0.22)',
+    background: '#E9E5D8',
+    color: '#173A29',
+    cursor: 'pointer',
+    fontSize: '12px',
+    fontWeight: '600',
+    whiteSpace: 'nowrap',
+  },
+
+  resetRow: {
+    display: 'flex',
+    justifyContent: 'flex-end',
+    marginTop: '2px',
+  },
+
+  resetBtn: {
+    padding: '8px 16px',
+    borderRadius: '20px',
+    border: '1px solid #173A29',
+    background: 'transparent',
+    color: '#173A29',
+    cursor: 'pointer',
+    fontSize: '12px',
+    fontWeight: '600',
+  },
+
   filterGroup: {
     display: 'flex',
     alignItems: 'center',
@@ -290,7 +458,7 @@ const styles = {
     flexWrap: 'wrap',
   },
   filterLabel: {
-    color: '#7c3aed',
+    color: '#173A29',
     fontSize: '13px',
     fontWeight: '600',
     minWidth: '70px',
@@ -304,21 +472,21 @@ const styles = {
   filterBtn: {
     padding: '7px 16px',
     borderRadius: '20px',
-    border: '1px solid rgba(139,92,246,0.3)',
-    background: 'transparent',
-    color: '#c4b5fd',
+    border: '1px solid rgba(52,78,65,0.22)',
+    background: '#F3F0E6',
+    color: '#173A29',
     fontSize: '13px',
     cursor: 'pointer',
     transition: 'all 0.2s',
   },
   filterActive: {
-    background: 'linear-gradient(135deg, #7c3aed, #a855f7)',
-    border: '1px solid #a855f7',
-    color: 'white',
-    boxShadow: '0 0 15px rgba(139,92,246,0.3)',
+    background: '#173A29',
+    border: '1px solid #173A29',
+    color: '#FFFFFF',
+    boxShadow: '0 6px 16px rgba(23,58,41,0.18)',
   },
   content: {
-    padding: '40px 60px',
+    padding: '40px clamp(16px, 4vw, 60px)',
   },
   unitSection: {
     marginBottom: '48px',
@@ -329,28 +497,28 @@ const styles = {
     gap: '12px',
     marginBottom: '20px',
     paddingBottom: '12px',
-    borderBottom: '1px solid rgba(139,92,246,0.2)',
+    borderBottom: '1px solid rgba(52,78,65,0.15)',
   },
   unitDot: {
     width: '10px',
     height: '10px',
     borderRadius: '50%',
-    background: '#a855f7',
+    background: '#588157',
     flexShrink: 0,
   },
   unitTitle: {
-    color: 'white',
+    color: '#173A29',
     fontSize: '1.15rem',
     fontWeight: '700',
     flex: 1,
   },
   unitCount: {
-    color: '#7c3aed',
+    color: '#FFFFFF',
     fontSize: '13px',
-    background: 'rgba(124,58,237,0.15)',
+    background: '#173A29',
     padding: '4px 12px',
     borderRadius: '20px',
-    border: '1px solid rgba(124,58,237,0.3)',
+    border: '1px solid #173A29',
   },
   cardList: {
     display: 'flex',
@@ -358,11 +526,12 @@ const styles = {
     gap: '16px',
   },
   card: {
-    background: 'rgba(139,92,246,0.06)',
-    border: '1px solid rgba(139,92,246,0.2)',
+    background: '#F5F1E6',
+    border: '1px solid rgba(52,78,65,0.16)',
     borderRadius: '16px',
     padding: '24px',
-    transition: 'border-color 0.2s',
+    transition: 'border-color 0.2s, box-shadow 0.2s',
+    boxShadow: '0 8px 22px rgba(52,78,65,0.06)',
   },
   cardTop: {
     marginBottom: '14px',
@@ -380,28 +549,28 @@ const styles = {
     fontWeight: '700',
   },
   yearBadge: {
-    background: 'rgba(139,92,246,0.15)',
-    border: '1px solid rgba(139,92,246,0.3)',
-    color: '#c4b5fd',
+    background: 'rgba(52,78,65,0.08)',
+    border: '1px solid rgba(52,78,65,0.22)',
+    color: '#173A29',
     padding: '4px 12px',
     borderRadius: '20px',
     fontSize: '12px',
     fontWeight: '600',
   },
   unitSmall: {
-    color: '#6b7280',
+    color: '#5D685F',
     fontSize: '12px',
   },
   question: {
-    color: '#e2e8f0',
+    color: '#17251D',
     fontSize: '1rem',
     lineHeight: '1.7',
     marginBottom: '16px',
   },
   answerBtn: {
-    background: 'rgba(124,58,237,0.15)',
-    border: '1px solid rgba(124,58,237,0.3)',
-    color: '#a855f7',
+    background: '#173A29',
+    border: '1px solid #173A29',
+    color: '#FFFFFF',
     padding: '8px 20px',
     borderRadius: '20px',
     fontSize: '13px',
@@ -411,20 +580,20 @@ const styles = {
   },
   answerBox: {
     marginTop: '16px',
-    background: 'rgba(0,0,0,0.3)',
-    border: '1px solid rgba(139,92,246,0.2)',
+    background: '#F4F1E7',
+    border: '1px solid rgba(52,78,65,0.18)',
     borderRadius: '12px',
     padding: '20px',
   },
   answerLabel: {
-    color: '#86efac',
+    color: '#3A5A40',
     fontSize: '13px',
     fontWeight: '600',
     marginBottom: '12px',
     letterSpacing: '0.5px',
   },
   answerText: {
-    color: '#d1d5db',
+    color: '#26352C',
     fontSize: '0.9rem',
     lineHeight: '1.8',
     whiteSpace: 'pre-wrap',
@@ -438,19 +607,19 @@ const styles = {
   loader: {
     width: '40px',
     height: '40px',
-    border: '3px solid rgba(139,92,246,0.3)',
-    borderTop: '3px solid #a855f7',
+    border: '3px solid rgba(52,78,65,0.22)',
+    borderTop: '3px solid #173A29',
     borderRadius: '50%',
     animation: 'spin 1s linear infinite',
     margin: '0 auto',
   },
   errorBox: {
-    margin: '40px 60px',
+    margin: '26px clamp(16px, 4vw, 56px)',
     padding: '20px',
-    background: 'rgba(239,68,68,0.1)',
-    border: '1px solid rgba(239,68,68,0.3)',
-    borderRadius: '12px',
-    color: '#fca5a5',
+    background: 'rgba(217,164,65,0.10)',
+    border: '1px solid rgba(217,164,65,0.38)',
+    borderRadius: '14px',
+    color: '#173A29',
     textAlign: 'center',
   },
 };

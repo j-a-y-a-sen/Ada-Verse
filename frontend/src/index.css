@@ -6,17 +6,19 @@
 
 body {
   font-family: 'Segoe UI', sans-serif;
-  background: #0a0010;
+  background: #C5BEA9;
   overflow-x: hidden;
 }
 
 ::-webkit-scrollbar {
   width: 6px;
 }
+
 ::-webkit-scrollbar-track {
-  background: #0a0010;
+  background: #C5BEA9;
 }
+
 ::-webkit-scrollbar-thumb {
-  background: #7c3aed;
+  background: #344E41;
   border-radius: 10px;
 }

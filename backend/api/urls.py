@@ -2,25 +2,21 @@ from django.urls import path
 from . import views
 
 urlpatterns = [
-    # ── Test ──────────────────────────────────────────────
-    path('test/', views.test_api, name='test-api'),
+    path("test/", views.test_api, name="test-api"),
+    path("notes/", views.get_notes, name="get-notes"),
+    path("algorithms/", views.get_algorithms, name="get-algorithms"),
 
-    # ── Notes ─────────────────────────────────────────────
-    path('notes/', views.get_notes, name='get-notes'),
+    path(
+        "visualizer/algorithms/",
+        views.get_visualizer_algorithms,
+        name="get-visualizer-algorithms",
+    ),
 
-    # ── Algorithms ────────────────────────────────────────
-    path('algorithms/', views.get_algorithms, name='get-algorithms'),
+    path("pyqs/", views.get_pyqs, name="get-pyqs"),
 
-    # ── Visualizer ────────────────────────────────────────
-    path('visualizer/algorithms/', views.get_visualizer_algorithms, name='get-visualizer-algorithms'),
+    path("register/", views.register_user, name="register"),
+    path("login/", views.login_user, name="login"),
 
-    # ── PYQs ──────────────────────────────────────────────
-    path('pyqs/', views.get_pyqs, name='get-pyqs'),
-
-    # ── Auth ──────────────────────────────────────────────
-    path('register/', views.register_user, name='register'),
-    path('login/', views.login_user, name='login'),
-
-    # ── AI Chatbot ────────────────────────────────────────
-    path('ai-chat/', views.ai_chat, name='ai-chat'),
+    path("chat/", views.ai_chat, name="ai-chat"),
+    path("ai-chat/", views.ai_chat, name="ai-chat-legacy"),
 ]

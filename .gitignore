@@ -2,3 +2,6 @@ ada-project.zip
 node_modules/
 build/
 .env
+__pycache__/
+*.py[cod]
+*.pyo

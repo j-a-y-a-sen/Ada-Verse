@@ -1,182 +1,325 @@
 import React, { useRef } from 'react';
 import { Canvas, useFrame } from '@react-three/fiber';
-import { Float, Stars, OrbitControls, MeshDistortMaterial, MeshWobbleMaterial } from '@react-three/drei';
+import { Float, OrbitControls } from '@react-three/drei';
 
-function PulsingCore() {
+/*
+  ADAverse Home 3D model
+  - Replaces the old purple abstract orbital model.
+  - Uses the same cream / forest-green palette as the new Home design.
+  - No external 3D model or asset is required.
+*/
+
+function LaptopScreen() {
   const ref = useRef();
+
   useFrame((state) => {
     const t = state.clock.elapsedTime;
-    ref.current.scale.setScalar(1 + Math.sin(t * 2) * 0.08);
-    ref.current.rotation.y = t * 0.3;
-    ref.current.rotation.z = t * 0.1;
+    ref.current.rotation.y = Math.sin(t * 0.45) * 0.035;
+    ref.current.rotation.x = -0.10 + Math.sin(t * 0.35) * 0.012;
   });
-  return (
-    <mesh ref={ref} position={[0, 0, 0]}>
-      <sphereGeometry args={[1.3, 128, 128]} />
-      <MeshDistortMaterial
-        color="#5b21b6"
-        distort={0.7}
-        speed={3}
-        roughness={0}
-        metalness={1}
-        emissive="#7c3aed"
-        emissiveIntensity={0.8}
-      />
-    </mesh>
-  );
-}
 
-function OrbitingSphere({ radius, speed, size, color, offset }) {
-  const ref = useRef();
-  useFrame((state) => {
-    const t = state.clock.elapsedTime * speed + offset;
-    ref.current.position.x = Math.cos(t) * radius;
-    ref.current.position.y = Math.sin(t * 0.7) * radius * 0.5;
-    ref.current.position.z = Math.sin(t) * radius;
-    ref.current.rotation.x = t;
-    ref.current.rotation.y = t * 0.7;
-  });
   return (
-    <mesh ref={ref}>
-      <sphereGeometry args={[size, 32, 32]} />
-      <meshStandardMaterial
-        color={color}
-        emissive={color}
-        emissiveIntensity={1.5}
-        roughness={0}
-        metalness={1}
-      />
-    </mesh>
-  );
-}
-
-function OrbitingRing({ radius, speed, offset, color, tilt }) {
-  const ref = useRef();
-  useFrame((state) => {
-    const t = state.clock.elapsedTime * speed + offset;
-    ref.current.position.x = Math.cos(t) * radius;
-    ref.current.position.y = Math.sin(t * 0.5) * radius * 0.4;
-    ref.current.position.z = Math.sin(t) * radius;
-    ref.current.rotation.x = t * 0.5 + tilt;
-    ref.current.rotation.z = t * 0.3;
-  });
-  return (
-    <mesh ref={ref}>
-      <torusGeometry args={[0.45, 0.06, 16, 100]} />
-      <meshStandardMaterial
-        color={color}
-        emissive={color}
-        emissiveIntensity={2.5}
-        metalness={1}
-        roughness={0}
-      />
-    </mesh>
-  );
-}
-
-function OrbitingCrystal({ radius, speed, offset, color }) {
-  const ref = useRef();
-  useFrame((state) => {
-    const t = state.clock.elapsedTime * speed + offset;
-    ref.current.position.x = Math.cos(t) * radius;
-    ref.current.position.y = Math.sin(t * 0.6) * radius * 0.6;
-    ref.current.position.z = Math.sin(t) * radius;
-    ref.current.rotation.x = t * 0.8;
-    ref.current.rotation.y = t;
-  });
-  return (
-    <mesh ref={ref}>
-      <octahedronGeometry args={[0.3]} />
-      <meshStandardMaterial
-        color={color}
-        emissive={color}
-        emissiveIntensity={2}
-        roughness={0}
-        metalness={1}
-      />
-    </mesh>
-  );
-}
-
-function RotatingOuterRing({ tilt, color, speed }) {
-  const ref = useRef();
-  useFrame((state) => {
-    ref.current.rotation.z = state.clock.elapsedTime * speed;
-    ref.current.rotation.x = tilt;
-  });
-  return (
-    <mesh ref={ref}>
-      <torusGeometry args={[2.8, 0.025, 16, 200]} />
-      <meshStandardMaterial
-        color={color}
-        emissive={color}
-        emissiveIntensity={3}
-        metalness={1}
-        roughness={0}
-        transparent
-        opacity={0.8}
-      />
-    </mesh>
-  );
-}
-
-function WobblyMoon({ position, color, speed }) {
-  const ref = useRef();
-  useFrame((state) => {
-    ref.current.rotation.x = state.clock.elapsedTime * speed;
-    ref.current.rotation.y = state.clock.elapsedTime * speed * 0.6;
-  });
-  return (
-    <Float speed={2} floatIntensity={2} rotationIntensity={0.5}>
-      <mesh ref={ref} position={position}>
-        <sphereGeometry args={[0.4, 64, 64]} />
-        <MeshWobbleMaterial
-          color={color}
-          factor={0.5}
-          speed={3}
-          emissive={color}
-          emissiveIntensity={0.8}
-          roughness={0}
-          metalness={1}
+    <group ref={ref} position={[0, 1.0, 0]}>
+      {/* Laptop display frame */}
+      <mesh>
+        <boxGeometry args={[3.7, 2.35, 0.16]} />
+        <meshStandardMaterial
+          color="#18392B"
+          roughness={0.3}
+          metalness={0.15}
         />
       </mesh>
-    </Float>
+
+      {/* Cream display bezel */}
+      <mesh position={[0, 0, 0.095]}>
+        <boxGeometry args={[3.35, 1.98, 0.035]} />
+        <meshStandardMaterial color="#DAD7CD" roughness={0.65} />
+      </mesh>
+
+      {/* Screen */}
+      <mesh position={[0, 0, 0.12]}>
+        <boxGeometry args={[3.08, 1.72, 0.025]} />
+        <meshStandardMaterial
+          color="#EEF0E7"
+          roughness={0.45}
+          metalness={0.05}
+        />
+      </mesh>
+
+      {/* Screen top bar */}
+      <mesh position={[-0.92, 0.65, 0.145]}>
+        <boxGeometry args={[1.05, 0.12, 0.02]} />
+        <meshStandardMaterial color="#A3B18A" roughness={0.6} />
+      </mesh>
+
+      {/* Screen side menu */}
+      <mesh position={[-1.12, 0.05, 0.145]}>
+        <boxGeometry args={[0.42, 1.0, 0.02]} />
+        <meshStandardMaterial color="#DAD7CD" roughness={0.6} />
+      </mesh>
+
+      {[0.48, 0.18, -0.12, -0.42].map((y, i) => (
+        <mesh key={i} position={[-1.12, y, 0.17]}>
+          <boxGeometry args={[0.20, 0.07, 0.02]} />
+          <meshStandardMaterial color="#588157" roughness={0.5} />
+        </mesh>
+      ))}
+
+      {/* Algorithm chart bars */}
+      {[
+        [-0.35, 0.18, 0.38],
+        [0.05, 0.38, 0.78],
+        [0.45, 0.10, 0.22],
+        [0.85, 0.52, 1.05],
+      ].map(([x, y, h], i) => (
+        <mesh key={i} position={[x, -0.38 + h / 2, 0.17]}>
+          <boxGeometry args={[0.25, h, 0.05]} />
+          <meshStandardMaterial
+            color={i % 2 === 0 ? '#3A5A40' : '#588157'}
+            roughness={0.45}
+          />
+        </mesh>
+      ))}
+
+      {/* Chart baseline */}
+      <mesh position={[0.35, -0.38, 0.17]}>
+        <boxGeometry args={[1.65, 0.025, 0.035]} />
+        <meshStandardMaterial color="#344E41" />
+      </mesh>
+
+      {/* Small chart label */}
+      <mesh position={[0.88, 0.55, 0.17]}>
+        <boxGeometry args={[0.45, 0.08, 0.025]} />
+        <meshStandardMaterial color="#18392B" />
+      </mesh>
+
+      {/* Camera */}
+      <mesh position={[0, 0.98, 0.19]}>
+        <sphereGeometry args={[0.035, 16, 16]} />
+        <meshStandardMaterial color="#0D1B16" />
+      </mesh>
+    </group>
   );
 }
 
-function EnergyParticle({ index, count }) {
+function LaptopBase() {
   const ref = useRef();
-  const angle = (index / count) * Math.PI * 2;
 
   useFrame((state) => {
-    if (!ref.current) return;
     const t = state.clock.elapsedTime;
-    const currentAngle = angle + t * 0.5;
-    const r = 2.2 + Math.sin(t + index) * 0.3;
-    ref.current.position.x = Math.cos(currentAngle) * r;
-    ref.current.position.y = Math.sin(currentAngle * 2) * 0.8;
-    ref.current.position.z = Math.sin(currentAngle) * r;
+    ref.current.rotation.y = Math.sin(t * 0.45) * 0.035;
   });
 
   return (
-    <mesh ref={ref}>
-      <sphereGeometry args={[0.04, 8, 8]} />
-      <meshStandardMaterial
-        color="#c4b5fd"
-        emissive="#a855f7"
-        emissiveIntensity={3}
-      />
-    </mesh>
+    <group ref={ref} position={[0, -0.35, 0]}>
+      {/* Base */}
+      <mesh rotation={[-0.05, 0, 0]}>
+        <boxGeometry args={[4.15, 0.25, 2.65]} />
+        <meshStandardMaterial
+          color="#A3B18A"
+          roughness={0.5}
+          metalness={0.05}
+        />
+      </mesh>
+
+      {/* Keyboard panel */}
+      <mesh position={[0, 0.14, -0.12]} rotation={[-0.05, 0, 0]}>
+        <boxGeometry args={[3.65, 0.055, 1.45]} />
+        <meshStandardMaterial color="#DAD7CD" roughness={0.7} />
+      </mesh>
+
+      {/* Keyboard rows */}
+      {[0.43, 0.15, -0.13, -0.41].map((z, row) => (
+        <group key={row}>
+          {Array.from({ length: row === 3 ? 7 : 9 }).map((_, i) => {
+            const count = row === 3 ? 7 : 9;
+            const width = 2.95 / count;
+            return (
+              <mesh
+                key={i}
+                position={[
+                  -1.475 + width * i + width / 2,
+                  0.19,
+                  z,
+                ]}
+              >
+                <boxGeometry args={[width - 0.035, 0.035, 0.18]} />
+                <meshStandardMaterial
+                  color={i === 1 && row === 0 ? '#588157' : '#344E41'}
+                  roughness={0.65}
+                />
+              </mesh>
+            );
+          })}
+        </group>
+      ))}
+
+      {/* Trackpad */}
+      <mesh position={[0, 0.20, 0.55]}>
+        <boxGeometry args={[1.0, 0.035, 0.62]} />
+        <meshStandardMaterial color="#EEF0E7" roughness={0.7} />
+      </mesh>
+
+      {/* Front edge */}
+      <mesh position={[0, -0.13, 1.30]}>
+        <boxGeometry args={[3.9, 0.06, 0.08]} />
+        <meshStandardMaterial color="#588157" roughness={0.5} />
+      </mesh>
+    </group>
   );
 }
 
-function EnergyParticles() {
-  const count = 30;
+function Laptop() {
+  return (
+    <group rotation={[0, -0.10, 0]} scale={0.92}>
+      <LaptopScreen />
+      <LaptopBase />
+    </group>
+  );
+}
+
+function Book({ position, rotation, scale = 1, color = '#18392B', labelColor = '#DAD7CD' }) {
+  return (
+    <group position={position} rotation={rotation} scale={scale}>
+      <mesh>
+        <boxGeometry args={[2.15, 0.30, 1.15]} />
+        <meshStandardMaterial color={color} roughness={0.7} />
+      </mesh>
+
+      <mesh position={[0, 0.16, 0]}>
+        <boxGeometry args={[1.88, 0.025, 0.92]} />
+        <meshStandardMaterial color={labelColor} roughness={0.8} />
+      </mesh>
+
+      <mesh position={[0, 0.18, 0.47]}>
+        <boxGeometry args={[1.25, 0.025, 0.025]} />
+        <meshStandardMaterial color={color} roughness={0.7} />
+      </mesh>
+    </group>
+  );
+}
+
+function Books() {
+  const ref = useRef();
+
+  useFrame((state) => {
+    const t = state.clock.elapsedTime;
+    ref.current.position.y = Math.sin(t * 0.8) * 0.035;
+    ref.current.rotation.y = Math.sin(t * 0.35) * 0.025;
+  });
+
+  return (
+    <group ref={ref} position={[2.55, -1.0, 0.05]} rotation={[0, -0.08, -0.03]}>
+      <Book position={[0, 0, 0]} rotation={[0, 0, 0.02]} color="#18392B" />
+      <Book position={[0.08, 0.32, 0]} rotation={[0, 0, -0.03]} color="#3A5A40" />
+      <Book position={[-0.03, 0.64, 0]} rotation={[0, 0, 0.015]} color="#588157" />
+    </group>
+  );
+}
+
+function CoffeeCup() {
+  const ref = useRef();
+
+  useFrame((state) => {
+    const t = state.clock.elapsedTime;
+    ref.current.rotation.y = Math.sin(t * 0.5) * 0.05;
+  });
+
+  return (
+    <group ref={ref} position={[3.05, -1.18, 0.72]}>
+      <mesh>
+        <cylinderGeometry args={[0.42, 0.34, 0.62, 48]} />
+        <meshStandardMaterial color="#18392B" roughness={0.65} />
+      </mesh>
+
+      <mesh rotation={[Math.PI / 2, 0, 0]} position={[0, 0, 0.02]}>
+        <torusGeometry args={[0.42, 0.075, 16, 48]} />
+        <meshStandardMaterial color="#A3B18A" roughness={0.6} />
+      </mesh>
+
+      <mesh position={[0.47, 0, 0]}>
+        <torusGeometry args={[0.20, 0.065, 16, 32]} />
+        <meshStandardMaterial color="#18392B" roughness={0.65} />
+      </mesh>
+
+      <mesh position={[0, 0.32, 0]}>
+        <cylinderGeometry args={[0.31, 0.31, 0.015, 48]} />
+        <meshStandardMaterial color="#3A5A40" roughness={0.8} />
+      </mesh>
+    </group>
+  );
+}
+
+function Notebook() {
+  return (
+    <group position={[1.05, -1.12, 1.05]} rotation={[-0.04, 0.12, -0.10]}>
+      <mesh>
+        <boxGeometry args={[1.65, 0.12, 1.15]} />
+        <meshStandardMaterial color="#DAD7CD" roughness={0.85} />
+      </mesh>
+
+      {[0.22, -0.02, -0.26].map((z, i) => (
+        <mesh key={i} position={[0.05, 0.075, z]}>
+          <boxGeometry args={[1.05, 0.018, 0.025]} />
+          <meshStandardMaterial color="#588157" roughness={0.8} />
+        </mesh>
+      ))}
+    </group>
+  );
+}
+
+function Plant() {
+  return (
+    <group position={[3.0, -0.65, -0.15]} scale={0.82}>
+      <mesh position={[0, -0.45, 0]}>
+        <cylinderGeometry args={[0.38, 0.48, 0.65, 32]} />
+        <meshStandardMaterial color="#18392B" roughness={0.75} />
+      </mesh>
+
+      <mesh position={[0, 0.28, 0]}>
+        <cylinderGeometry args={[0.045, 0.06, 1.45, 12]} />
+        <meshStandardMaterial color="#3A5A40" roughness={0.8} />
+      </mesh>
+
+      <mesh position={[-0.25, 0.72, 0]} rotation={[0, 0, -0.45]} scale={[0.42, 0.16, 0.08]}>
+        <sphereGeometry args={[1, 24, 16]} />
+        <meshStandardMaterial color="#588157" roughness={0.8} />
+      </mesh>
+
+      <mesh position={[0.28, 0.95, 0]} rotation={[0, 0, 0.45]} scale={[0.45, 0.17, 0.08]}>
+        <sphereGeometry args={[1, 24, 16]} />
+        <meshStandardMaterial color="#3A5A40" roughness={0.8} />
+      </mesh>
+
+      <mesh position={[0.08, 1.20, 0]} rotation={[0, 0, 0.05]} scale={[0.38, 0.15, 0.07]}>
+        <sphereGeometry args={[1, 24, 16]} />
+        <meshStandardMaterial color="#A3B18A" roughness={0.8} />
+      </mesh>
+    </group>
+  );
+}
+
+function FloatingDots() {
+  const dots = [
+    [-3.1, 1.8, 0.2],
+    [-3.3, -0.7, 0.4],
+    [3.25, 1.9, -0.2],
+    [2.3, 2.15, 0.2],
+    [-2.4, 1.25, 0.6],
+  ];
 
   return (
     <>
-      {Array.from({ length: count }, (_, i) => (
-        <EnergyParticle key={i} index={i} count={count} />
+      {dots.map((position, i) => (
+        <Float key={i} speed={1 + i * 0.15} floatIntensity={0.25}>
+          <mesh position={position}>
+            <sphereGeometry args={[0.055 + (i % 2) * 0.025, 16, 16]} />
+            <meshStandardMaterial
+              color={i % 2 === 0 ? '#588157' : '#A3B18A'}
+              roughness={0.55}
+            />
+          </mesh>
+        </Float>
       ))}
     </>
   );
@@ -184,51 +327,91 @@ function EnergyParticles() {
 
 function Scene3D() {
   return (
-    <div style={{ width: '100%', height: '520px', position: 'relative', zIndex: 1 }}>
-      <Canvas camera={{ position: [0, 0, 7], fov: 55 }} style={{ background: 'transparent' }}>
-        {/* Rich lighting */}
-        <ambientLight intensity={0.3} />
-        <pointLight position={[0, 0, 4]} intensity={4} color="#a855f7" />
-        <pointLight position={[5, 5, 2]} intensity={3} color="#7c3aed" />
-        <pointLight position={[-5, -3, -2]} intensity={2} color="#c4b5fd" />
-        <pointLight position={[0, -5, 0]} intensity={2} color="#6d28d9" />
-        <pointLight position={[3, 2, -3]} intensity={1.5} color="#ddd6fe" />
+    <div
+      style={{
+        width: '100%',
+        height: '520px',
+        position: 'relative',
+        zIndex: 1,
+      }}
+    >
+      <Canvas
+        camera={{
+          position: [0, 0.15, 9],
+          fov: 48,
+        }}
+        style={{
+          background: 'transparent',
+        }}
+      >
+        <ambientLight intensity={1.2} />
 
-        <Stars radius={80} depth={50} count={3000} factor={3} fade speed={0.5} />
+        <directionalLight
+          position={[4, 7, 6]}
+          intensity={2.2}
+          color="#FFF8E8"
+        />
 
-        {/* Pulsing distorted core */}
-        <PulsingCore />
+        <pointLight
+          position={[-4, 3, 4]}
+          intensity={1.8}
+          color="#A3B18A"
+        />
 
-        {/* Outer glowing orbit rings */}
-        <RotatingOuterRing tilt={0} color="#8b5cf6" speed={0.4} />
-        <RotatingOuterRing tilt={Math.PI / 3} color="#a855f7" speed={-0.3} />
-        <RotatingOuterRing tilt={Math.PI / 6} color="#c4b5fd" speed={0.2} />
+        <pointLight
+          position={[4, -2, 2]}
+          intensity={1.4}
+          color="#588157"
+        />
 
-        {/* Orbiting spheres */}
-        <OrbitingSphere radius={2.2} speed={0.6} size={0.25} color="#a855f7" offset={0} />
-        <OrbitingSphere radius={2.2} speed={0.6} size={0.2} color="#c4b5fd" offset={2.1} />
-        <OrbitingSphere radius={2.2} speed={0.6} size={0.18} color="#7c3aed" offset={4.2} />
-        <OrbitingSphere radius={1.8} speed={-0.8} size={0.22} color="#ddd6fe" offset={1} />
-        <OrbitingSphere radius={1.8} speed={-0.8} size={0.15} color="#8b5cf6" offset={3.5} />
+        <Float
+          speed={1.15}
+          floatIntensity={0.18}
+          rotationIntensity={0.12}
+        >
+          <Laptop />
+        </Float>
 
-        {/* Orbiting rings */}
-        <OrbitingRing radius={2.5} speed={0.5} offset={0} color="#a855f7" tilt={0} />
-        <OrbitingRing radius={2.5} speed={0.5} offset={3.14} color="#7c3aed" tilt={1} />
+        <Float
+          speed={0.8}
+          floatIntensity={0.22}
+          rotationIntensity={0.08}
+        >
+          <Books />
+        </Float>
 
-        {/* Orbiting crystals */}
-        <OrbitingCrystal radius={3} speed={0.4} offset={0} color="#c4b5fd" />
-        <OrbitingCrystal radius={3} speed={0.4} offset={2} color="#a855f7" />
-        <OrbitingCrystal radius={3} speed={0.4} offset={4} color="#8b5cf6" />
+        <Float
+          speed={0.9}
+          floatIntensity={0.18}
+          rotationIntensity={0.10}
+        >
+          <CoffeeCup />
+        </Float>
 
-        {/* Wobbling moons */}
-        <WobblyMoon position={[-2.5, 1.5, 0]} color="#7c3aed" speed={0.8} />
-        <WobblyMoon position={[2.5, -1.5, -0.5]} color="#a855f7" speed={1} />
-        <WobblyMoon position={[0, 2.8, 0]} color="#6d28d9" speed={0.6} />
+        <Float
+          speed={0.7}
+          floatIntensity={0.12}
+          rotationIntensity={0.06}
+        >
+          <Notebook />
+        </Float>
 
-        {/* Energy particle ring */}
-        <EnergyParticles />
+        <Float
+          speed={0.65}
+          floatIntensity={0.15}
+          rotationIntensity={0.04}
+        >
+          <Plant />
+        </Float>
 
-        <OrbitControls enableZoom={false} enablePan={false} autoRotate autoRotateSpeed={1} />
+        <FloatingDots />
+
+        <OrbitControls
+          enableZoom={false}
+          enablePan={false}
+          autoRotate
+          autoRotateSpeed={0.35}
+        />
       </Canvas>
     </div>
   );
